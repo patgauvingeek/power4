@@ -1,4 +1,5 @@
 use std::io;
+use std::time::{Duration, Instant};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
   buffer::Buffer,
@@ -15,6 +16,7 @@ mod game;
 #[derive(Debug, Default)]
 pub struct App
 {
+  iteration: usize,
   game: game::Game,
   selected_column: usize,
   exit: bool
@@ -25,10 +27,22 @@ impl App
   /// runs the application's main loop until the user quits
   pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()>
   {
+    let tick_rate = Duration::from_secs(1);
+    let mut last_tick = Instant::now();
     while !self.exit
     {
       terminal.draw(|frame| self.draw(frame))?;
-      self.handle_events()?;
+      let timeout = tick_rate
+        .saturating_sub(last_tick.elapsed());
+      if event::poll(timeout)?
+      {
+        self.handle_events()?;
+      }
+      if last_tick.elapsed() >= tick_rate
+      {
+        self.on_tick();
+        last_tick = Instant::now();
+      }
     }
     Ok(())
   }
@@ -43,15 +57,21 @@ impl App
     frame.render_widget(self, frame.area());
   }
 
+  fn on_tick(&mut self)
+  {
+    self.iteration += 1;
+    self.game.animate();
+  }
+
   fn handle_events(&mut self) -> io::Result<()>
   {
     match event::read()? {
-        // it's important to check that the event is a key press event as
-        // crossterm also emits key release and repeat events on Windows.
-        Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-            self.handle_key_event(key_event)
-        }
-        _ => {}
+      // it's important to check that the event is a key press event as
+      // crossterm also emits key release and repeat events on Windows.
+      Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+          self.handle_key_event(key_event)
+      }
+      _ => {}
     };
     Ok(())
   }
@@ -74,7 +94,14 @@ impl App
 
   fn handle_space(&mut self)
   {
-    self.game.drop(self.selected_column);
+    if self.game.winner() == None && !self.game.is_full()
+    {
+      self.game.drop(self.selected_column);
+    }
+    else
+    {
+      self.game.reset();
+    }
   }
 
   pub fn handle_key_event(&mut self, key_event: KeyEvent)
@@ -92,7 +119,7 @@ impl App
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-      let title = Line::from(" Power 4 ".bold());
+      let title = Line::from(" Connect Four ".bold());
       let instructions = Line::from(vec![
           " Select ".into(),
           "<Left>".blue().bold(),
@@ -127,11 +154,32 @@ impl Widget for &App {
             Line::from(spans) // Combine row spans into a single Line
           })
           .collect();
+      
+      if self.game.winner() != None
+      {
+        power_4.insert(0, Line::from(""));
+        power_4.insert(0, Line::from("GAME OVER"));
+        let winner_text = format!("Player {} Wins !!!", if self.game.winner() == Some(game::Player::One) { "One" } else { "Two" });
+        power_4.push(Line::from(""));
+        power_4.push(Line::from(winner_text));
+      }
+      else if self.game.is_full()
+      {
+        power_4.insert(0, Line::from(""));
+        power_4.insert(0, Line::from("GAME OVER"));
+        power_4.push(Line::from(""));
+        power_4.push(Line::from("DRAW !!!"));
+      }
+      else 
+      {
+        let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(6 - self.selected_column));
+        power_4.insert(0,  Line::from(column_indicator));
+        let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
+        power_4.insert(0,  Line::from(player_indicator));
+      }
 
-      let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(6 - self.selected_column));
-      power_4.insert(0,  Line::from(column_indicator));
-      let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
-      power_4.insert(0,  Line::from(player_indicator));
+      // power_4.push(Line::from(""));
+      // power_4.push(Line::from(format!("Iteration: {}", self.iteration)));
 
       Paragraph::new(power_4)
         .centered()
