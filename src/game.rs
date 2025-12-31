@@ -1,20 +1,20 @@
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Player {
-    #[default] One,
-    Two,
+  #[default] One,
+  Two
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Cell {
-    #[default] Empty,
-    Occupied(Player),
+  #[default] Empty,
+  Occupied(Player)
 }
 
 #[derive(Debug, Default)]
 pub struct Game {
-    board: [[Cell; 7]; 6], // A 6x7 grid (rows x columns)
-    current_player: Player,
-    game_over: bool,
+  board: [[Cell; 7]; 6], // A 6x7 grid (rows x columns)
+  current_player: Player,
+  game_over: bool,
 }
 
 impl Game {
@@ -30,6 +30,11 @@ impl Game {
   pub fn board(&self) -> &[[Cell; 7]]
   {
     &self.board
+  }
+
+  pub fn current_player(&self) -> Player
+  {
+    self.current_player
   }
 
   pub fn drop(&mut self, column_index: usize) -> bool

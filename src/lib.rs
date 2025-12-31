@@ -128,8 +128,11 @@ impl Widget for &App {
           })
           .collect();
 
-        let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(6 - self.selected_column));
-        power_4.insert(0,  Line::from(column_indicator));
+      let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(6 - self.selected_column));
+      power_4.insert(0,  Line::from(column_indicator));
+      let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
+      power_4.insert(0,  Line::from(player_indicator));
+
       Paragraph::new(power_4)
         .centered()
         .block(block)
