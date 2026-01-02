@@ -22,7 +22,8 @@ pub struct Game
   current_player: Player,
   winner: Option<Player>,
   player_one_available_token_count : usize,
-  player_two_available_token_count : usize
+  player_two_available_token_count : usize,
+  is_reseting : bool
 }
 
 impl Default for Game
@@ -34,7 +35,8 @@ impl Default for Game
       current_player: Default::default(),
       winner: Default::default(),
       player_one_available_token_count: 21,
-      player_two_available_token_count: 21
+      player_two_available_token_count: 21,
+      is_reseting: Default::default()
     }
   }
 }
@@ -68,6 +70,41 @@ impl Game
 
   pub fn animate(&mut self)
   {
+    if self.is_reseting
+    {
+      self.current_player = Player::One;
+      self.winner = None;
+      self.player_one_available_token_count += self.animated_board[self.animated_board.len()-1].iter().filter(|&c| *c == Cell::Occupied(Player::One)).count();
+      self.player_two_available_token_count += self.animated_board[self.animated_board.len()-1].iter().filter(|&c| *c == Cell::Occupied(Player::Two)).count();
+      for column_index in 0..self.animated_board[0].len()
+      {
+        for row_index in (1..self.animated_board.len()).rev()
+        {
+          self.animated_board[row_index][column_index] = self.animated_board[row_index-1][column_index];
+          self.animated_board[row_index-1][column_index] = Cell::Empty;
+        }
+      }
+      // row 0
+      for column_index in 0..self.animated_board[0].len()
+      {
+        self.animated_board[0][column_index] = Cell::Empty;
+      }
+      // reset animation is complete
+      if self.animated_board.iter().all(|&r| r.iter().all(|&c| c == Cell::Empty))
+      {
+        self.is_reseting = false;
+        self.current_player = Player::One;
+        self.winner = None;
+        for column_index in 0..self.validation_board[0].len()
+        {
+          for row_index in 0..self.validation_board.len()
+          {
+            self.validation_board[row_index][column_index] = Cell::Empty;
+          }
+        }
+      }
+      return;
+    }
     for column_index in 0..self.animated_board[0].len()
     {
       for row_index in (1..self.animated_board.len()).rev()
@@ -186,24 +223,7 @@ impl Game
 
   pub fn reset(&mut self)
   {
-    self.current_player = Player::One;
-    self.winner = None;
-    self.player_one_available_token_count = 21;
-    self.player_two_available_token_count = 21;
-    for column_index in 0..self.animated_board[0].len()
-    {
-      for row_index in 0..self.animated_board.len()
-      {
-        self.animated_board[row_index][column_index] = Cell::Empty;
-      }
-    }
-    for column_index in 0..self.validation_board[0].len()
-    {
-      for row_index in 0..self.validation_board.len()
-      {
-        self.validation_board[row_index][column_index] = Cell::Empty;
-      }
-    }
+    self.is_reseting = true;
   }
 }
 
