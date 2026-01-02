@@ -119,7 +119,7 @@ impl App
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-      let title = Line::from(" Connect Four ".bold());
+      let title = Line::from(" Power-4 ".bold());
       let instructions = Line::from(vec![
           " Select ".into(),
           "<Left>".blue().bold(),
