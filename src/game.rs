@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Player
 {
@@ -169,5 +171,34 @@ impl Game
         self.validation_board[row_index][column_index] = Cell::Empty;
       }
     }
+  }
+}
+
+#[cfg(debug_assertions)]
+impl fmt::Display for Game
+{
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+  {
+    let mut board_string = String::new();
+
+    // Iterate through rows (0 to 5)
+    for row in &self.validation_board {
+      board_string.push('|'); // Side border
+      for cell in row {
+        let symbol = match cell {
+          Cell::Empty => ".",
+          Cell::Occupied(Player::One) => "X", // Player 1 is X
+          Cell::Occupied(Player::Two) => "O", // Player 2 is O
+        };
+        board_string.push_str(&format!(" {} ", symbol));
+      }
+      board_string.push_str("|\n"); // End of row
+    }
+
+    // Add a bottom border and column numbers
+    board_string.push_str("+---------------------+ \n");
+    board_string.push_str("  0  1  2  3  4  5  6  ");
+
+    write!(f, "{}", board_string)
   }
 }

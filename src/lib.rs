@@ -11,7 +11,7 @@ use ratatui::{
   DefaultTerminal, Frame,
 };
 
-mod game;
+pub mod game;
 
 #[derive(Debug, Default)]
 pub struct App
@@ -27,7 +27,7 @@ impl App
   /// runs the application's main loop until the user quits
   pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()>
   {
-    let tick_rate = Duration::from_secs(1);
+    let tick_rate = Duration::from_millis(250);
     let mut last_tick = Instant::now();
     while !self.exit
     {
@@ -177,9 +177,6 @@ impl Widget for &App {
         let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
         power_4.insert(0,  Line::from(player_indicator));
       }
-
-      // power_4.push(Line::from(""));
-      // power_4.push(Line::from(format!("Iteration: {}", self.iteration)));
 
       Paragraph::new(power_4)
         .centered()
