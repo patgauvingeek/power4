@@ -14,13 +14,29 @@ pub enum Cell
   Occupied(Player)
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Game
 {
   validation_board: [[Cell; 7]; 6], // A 6x7 grid (rows x columns)
   animated_board: [[Cell; 7]; 6], // A 6x7 grid (rows x columns)
   current_player: Player,
-  winner: Option<Player>
+  winner: Option<Player>,
+  player_one_available_token_count : usize,
+  player_two_available_token_count : usize
+}
+
+impl Default for Game
+{
+  fn default() -> Self {
+    Self {
+      validation_board: Default::default(),
+      animated_board: Default::default(),
+      current_player: Default::default(),
+      winner: Default::default(),
+      player_one_available_token_count: 21,
+      player_two_available_token_count: 21
+    }
+  }
 }
 
 impl Game
@@ -38,6 +54,16 @@ impl Game
   pub fn winner(&self) -> Option<Player>
   {
     self.winner
+  }
+
+  pub fn player_one_available_token_count(&self) -> usize
+  {
+    self.player_one_available_token_count
+  }
+
+  pub fn player_two_available_token_count(&self) -> usize
+  {
+    self.player_two_available_token_count
   }
 
   pub fn animate(&mut self)
@@ -134,6 +160,11 @@ impl Game
     }
     // start the animation
     self.animated_board[0][column_index] = Cell::Occupied(self.current_player);
+    match self.current_player
+    {
+      Player::One => self.player_one_available_token_count -= 1,
+      Player::Two => self.player_two_available_token_count -= 1,
+    }
     // update the validation_board
     let mut row_index = self.validation_board.len() - 1;
     loop
@@ -157,6 +188,8 @@ impl Game
   {
     self.current_player = Player::One;
     self.winner = None;
+    self.player_one_available_token_count = 21;
+    self.player_two_available_token_count = 21;
     for column_index in 0..self.animated_board[0].len()
     {
       for row_index in 0..self.animated_board.len()

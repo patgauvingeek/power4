@@ -156,19 +156,31 @@ impl Widget for &App
           Line::from(spans) // Combine row spans into a single Line
         })
         .collect();
+
+    let token_count_spans: Vec<Span> = [
+      Span::from(format!("{} x ", self.game.player_one_available_token_count())),
+      Span::styled("●", Color::Red),
+      Span::from("       "),
+      Span::from(format!("{} x ", self.game.player_two_available_token_count())),
+      Span::styled("●", Color::Yellow),
+    ].to_vec();
+    power_4.push(Line::from(""));
+    power_4.push(Line::from(token_count_spans));
     
     if self.game.winner() != None
     {
-      power_4.insert(0, Line::from(""));
-      power_4.insert(0, Line::from("GAME OVER"));
+      power_4.insert(0, Line::from("")); // arrow
+      power_4.insert(0, Line::from("GAME OVER")); // token
+      power_4.insert(0, Line::from("")); // current player
       let winner_text = format!("Player {} Wins !!!", if self.game.winner() == Some(game::Player::One) { "One" } else { "Two" });
       power_4.push(Line::from(""));
       power_4.push(Line::from(winner_text));
     }
     else if self.game.is_full()
     {
-      power_4.insert(0, Line::from(""));
-      power_4.insert(0, Line::from("GAME OVER"));
+      power_4.insert(0, Line::from("")); // arrow
+      power_4.insert(0, Line::from("GAME OVER")); // token
+      power_4.insert(0, Line::from("")); // current player
       power_4.push(Line::from(""));
       power_4.push(Line::from("DRAW !!!"));
     }
