@@ -117,70 +117,78 @@ impl App
   }
 }
 
-impl Widget for &App {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-      let title = Line::from(" Power-4 ".bold());
-      let instructions = Line::from(vec![
-          " Select ".into(),
-          "<Left>".blue().bold(),
-          "<Right>".blue().bold(),
-          " Drop ".into(),
-          "<Space>".blue().bold(),
-          " Quit ".into(),
-          "<Q> ".blue().bold(),
-      ]);
-      let block = Block::bordered()
-        .title(title.centered())
-        .title_bottom(instructions.centered())
-        .border_set(border::THICK);
-      
-      let mut power_4: Vec<_> = self.game.board()
-        .iter()
-        .map(|row: &[game::Cell; 7]|
-        {
-          let spans: Vec<Span> = row
-            .iter()
-            .map(|cell| match cell
+impl Widget for &App
+{
+  fn render(self, area: Rect, buf: &mut Buffer)
+  {
+    let title = Line::from(" Power-4 ".bold());
+    let instructions = Line::from(vec![
+        " Select ".into(),
+        "<Left>".blue().bold(),
+        "<Right>".blue().bold(),
+        " Drop ".into(),
+        "<Space>".blue().bold(),
+        " Quit ".into(),
+        "<Q> ".blue().bold(),
+    ]);
+    let block = Block::bordered()
+      .title(title.centered())
+      .title_bottom(instructions.centered())
+      .border_set(border::THICK);
+    
+    let mut power_4: Vec<_> = self.game.board()
+      .iter()
+      .map(|row: &[game::Cell; 7]|
+      {
+        let spans: Vec<Span> = row
+          .iter()
+          .map(|cell| match cell
+          {
+            game::Cell::Empty => Span::raw(" . "), // Visual for empty cell
+            game::Cell::Occupied(player) =>
             {
-              game::Cell::Empty => Span::raw(" . "), // Visual for empty cell
-              game::Cell::Occupied(player) =>
-              {
-                // Customize colors based on player
-                let color = if player == &game::Player::One { Color::Red } else { Color::Yellow };
-                Span::styled(" ● ", Style::default().fg(color))
-              }
-            })
-            .collect();
-            Line::from(spans) // Combine row spans into a single Line
+              // Customize colors based on player
+              let color = if player == &game::Player::One { Color::Red } else { Color::Yellow };
+              Span::styled(" ● ", Style::default().fg(color))
+            }
           })
           .collect();
-      
-      if self.game.winner() != None
-      {
-        power_4.insert(0, Line::from(""));
-        power_4.insert(0, Line::from("GAME OVER"));
-        let winner_text = format!("Player {} Wins !!!", if self.game.winner() == Some(game::Player::One) { "One" } else { "Two" });
-        power_4.push(Line::from(""));
-        power_4.push(Line::from(winner_text));
-      }
-      else if self.game.is_full()
-      {
-        power_4.insert(0, Line::from(""));
-        power_4.insert(0, Line::from("GAME OVER"));
-        power_4.push(Line::from(""));
-        power_4.push(Line::from("DRAW !!!"));
-      }
-      else 
-      {
-        let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(6 - self.selected_column));
-        power_4.insert(0,  Line::from(column_indicator));
-        let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
-        power_4.insert(0,  Line::from(player_indicator));
-      }
-
-      Paragraph::new(power_4)
-        .centered()
-        .block(block)
-        .render(area, buf);
+          Line::from(spans) // Combine row spans into a single Line
+        })
+        .collect();
+    
+    if self.game.winner() != None
+    {
+      power_4.insert(0, Line::from(""));
+      power_4.insert(0, Line::from("GAME OVER"));
+      let winner_text = format!("Player {} Wins !!!", if self.game.winner() == Some(game::Player::One) { "One" } else { "Two" });
+      power_4.push(Line::from(""));
+      power_4.push(Line::from(winner_text));
     }
+    else if self.game.is_full()
+    {
+      power_4.insert(0, Line::from(""));
+      power_4.insert(0, Line::from("GAME OVER"));
+      power_4.push(Line::from(""));
+      power_4.push(Line::from("DRAW !!!"));
+    }
+    else
+    {
+      // insert arrow
+      let column_indicator = format!("{}{}{}", "   ".repeat(self.selected_column), " ↓ ", "   ".repeat(self.game.board().len() - self.selected_column));
+      power_4.insert(0,  Line::from(column_indicator));
+      // insert token
+      let column_indicator_token = format!("{}{}{}", "   ".repeat(self.selected_column), " ● ", "   ".repeat(self.game.board().len() - self.selected_column));
+      let color = if self.game.current_player() == game::Player::One { Color::Red } else { Color::Yellow };
+      power_4.insert(0,  Line::styled(column_indicator_token, Style::default().fg(color)));
+      // insert player name
+      let player_indicator = format!("{} {}", "Player", if self.game.current_player() == game::Player::One { "One" } else { "Two" });
+      power_4.insert(0,  Line::from(player_indicator));
+    }
+
+    Paragraph::new(power_4)
+      .centered()
+      .block(block)
+      .render(area, buf);
+  }
 }
