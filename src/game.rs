@@ -72,8 +72,6 @@ impl Game
   {
     if self.is_reseting
     {
-      self.current_player = Player::One;
-      self.winner = None;
       self.player_one_available_token_count += self.animated_board[self.animated_board.len()-1].iter().filter(|&c| *c == Cell::Occupied(Player::One)).count();
       self.player_two_available_token_count += self.animated_board[self.animated_board.len()-1].iter().filter(|&c| *c == Cell::Occupied(Player::Two)).count();
       for column_index in 0..self.animated_board[0].len()
